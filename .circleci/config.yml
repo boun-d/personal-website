@@ -36,4 +36,5 @@ jobs:
       - run: unzip awscliv2.zip
       - run: sudo ./aws/install
       - run: aws configure
+      - run: echo $AWS_DEFAULT_REGION
       - run: aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ECR_ACCOUNT_URL

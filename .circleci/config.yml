@@ -31,3 +31,13 @@ jobs:
       - persist_to_workspace:
           root: ~/personal-website-repo
           paths: .
+  push-image:
+    docker:
+      - image: cimg/base:2021.07
+    steps:
+      - checkout
+      - run: curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+      - run: unzip awscliv2.zip
+      - run: sudo ./aws/install
+      - run: aws configure
+      - run: aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ECR_ACCOUNT_URL

@@ -1,13 +1,9 @@
 version: 2.1
-orbs:
-  aws-ecr: circleci/aws-ecr@7.2.0
 workflows:
   build_test_push:
     jobs:
       - test
-      - aws-ecr/build-and-push-image:
-          repo: ${AWS_ECR_REPO_NAME}
-          tag: 'latest, ${CIRCLE_BUILD_NUM}'
+      - build-and-push-image:
           requires:
             - test
 jobs:
@@ -31,7 +27,7 @@ jobs:
       - persist_to_workspace:
           root: ~/personal-website-repo
           paths: .
-  push-image:
+  build-and-push-image:
     docker:
       - image: cimg/base:2021.07
     steps:

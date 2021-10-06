@@ -29,6 +29,9 @@ jobs:
       - image: cimg/base:2021.07
     steps:
       - checkout
+      - setup_remote_docker:
+          version: 19.03.13
+          docker_layer_caching: true
       - run: curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
       - run: unzip awscliv2.zip
       - run: sudo ./aws/install
@@ -36,7 +39,6 @@ jobs:
       - run: aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
       - run: aws configure set region.default $AWS_DEFAULT_REGION
       - run: aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ECR_ACCOUNT_URL
-      - run: setup_remote_docker
       - run: docker build -t $AWS_ECR_ACCOUNT_URL/$AWS_ECR_REPO_NAME:$CIRCLE_SHA1 -t $AWS_ECR_ACCOUNT_URL/$AWS_ECR_REPO_NAME:latest .
       - run: docker push $AWS_ECR_ACCOUNT_URL/$AWS_ECR_REPO_NAME:$CIRCLE_SHA1
       - run: docker push $AWS_ECR_ACCOUNT_URL/$AWS_ECR_REPO_NAME:latest

@@ -39,7 +39,8 @@ jobs:
       - run: aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
       - run: aws configure set region.default $AWS_DEFAULT_REGION
       - run: aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ECR_ACCOUNT_URL
-      - run: sudo dockerd
+      - run: sudo su
+      - run: systemctl start docker
       - run: docker build -t $AWS_ECR_ACCOUNT_URL/$AWS_ECR_REPO_NAME:$CIRCLE_SHA1 -t $AWS_ECR_ACCOUNT_URL/$AWS_ECR_REPO_NAME:latest .
       - run: docker push $AWS_ECR_ACCOUNT_URL/$AWS_ECR_REPO_NAME:$CIRCLE_SHA1
       - run: docker push $AWS_ECR_ACCOUNT_URL/$AWS_ECR_REPO_NAME:latest

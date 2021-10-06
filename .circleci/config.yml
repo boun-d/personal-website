@@ -29,9 +29,7 @@ jobs:
       - image: cimg/base:2021.07
     steps:
       - checkout
-      - setup_remote_docker:
-          version: 19.03.13
-          docker_layer_caching: true
+      - setup_remote_docker
       - run: curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
       - run: unzip awscliv2.zip
       - run: sudo ./aws/install

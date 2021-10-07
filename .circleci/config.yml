@@ -2,7 +2,14 @@ version: 2.1
 workflows:
   build_test_push:
     jobs:
+      - test
       - build-and-push-image:
+          requires:
+            - test
+          filters:
+            branches:
+              only:
+                - master
 
 jobs:
   test:
@@ -26,9 +33,6 @@ jobs:
           root: ~/personal-website-repo
           paths: .
   build-and-push-image:
-    branches: 
-      only:
-        - master
     docker:
       - image: cimg/base:2021.07
     steps:

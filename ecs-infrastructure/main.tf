@@ -2,13 +2,13 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "2.70.0"
+      version = "~> 2.0"
     }
   }
 
   backend "s3" {
-    bucket = "terraform-state-bucket"
-    key    = "state/terraform_state.tfstate"
+    bucket = "bound-daniel-terraform-state-bucket"
+    key    = "state/ecs/terraform_state.tfstate"
     region = "ap-southeast-2"
   }
 }

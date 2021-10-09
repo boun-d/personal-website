@@ -10,6 +10,14 @@ workflows:
             branches:
               only:
                 - master
+      - deploy-infrastructure:
+          type: approval
+          requires:
+            - build-and-push-image
+          filters:
+            branches:
+              only:
+                - master
 
 jobs:
   test:
@@ -38,14 +46,44 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - run: curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-      - run: unzip awscliv2.zip
-      - run: sudo ./aws/install
-      - run: aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
-      - run: aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-      - run: aws configure set region.default $AWS_DEFAULT_REGION
-      - run: aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ECR_ACCOUNT_URL
-      - run: docker build -t $AWS_ECR_ACCOUNT_URL/$AWS_ECR_REPO_NAME:$CIRCLE_SHA1 -t $AWS_ECR_ACCOUNT_URL/$AWS_ECR_REPO_NAME:latest .
-      - run: docker push $AWS_ECR_ACCOUNT_URL/$AWS_ECR_REPO_NAME:$CIRCLE_SHA1
-      - run: docker push $AWS_ECR_ACCOUNT_URL/$AWS_ECR_REPO_NAME:latest
-
+      - run:
+          name: Configure AWS CLI
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+            aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+            aws configure set region.default $AWS_DEFAULT_REGION
+      - run:
+          name: Login to AWS ECR
+          command: |
+            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ECR_ACCOUNT_URL
+      - run:
+          name: Build and push image to AWS ECR
+          command: |
+            docker build -t $AWS_ECR_ACCOUNT_URL/$AWS_ECR_REPO_NAME:$CIRCLE_SHA1 -t $AWS_ECR_ACCOUNT_URL/$AWS_ECR_REPO_NAME:latest .
+            docker push $AWS_ECR_ACCOUNT_URL/$AWS_ECR_REPO_NAME:$CIRCLE_SHA1
+            docker push $AWS_ECR_ACCOUNT_URL/$AWS_ECR_REPO_NAME:latest
+            terraform init
+  deploy-infrastructure:
+    docker:
+      - image: cimg/base:2021.07
+    steps:
+      - checkout
+      - run:
+          name: Configure AWS CLI
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+            aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+            aws configure set region.default $AWS_DEFAULT_REGION
+      - run:
+          name: Build infra
+          command: |
+            cd ecs-infrastructure
+            export TF_VAR_app_environment="prod"
+            export TF_VAR_aws_ecr_image_url="$AWS_ECR_ACCOUNT_URL/$AWS_ECR_REPO_NAME"
+            terraform init
